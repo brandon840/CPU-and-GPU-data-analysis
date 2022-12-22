@@ -1,0 +1,155 @@
+---
+title: "final_project_208"
+output: pdf_document
+date: "2022-12-19"
+---
+# Part a)
+```{R}
+library(tidyverse)
+cpu_gpu_data<-read_csv("chip_dataset.csv")
+names(cpu_gpu_data)
+```
+
+## CPU
+```{R}
+foundry_vs_year <- cpu_gpu_data[cpu_gpu_data$Type=="CPU",] %>%
+group_by(Foundry, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) %>%
+summarise(total_count = n())
+
+foundry_vs_year <- na.omit(foundry_vs_year)
+
+foundry_vs_year
+
+foundry_vs_year %>%
+ggplot(aes(x = year, y = total_count, group = Foundry,
+fill = Foundry, width=0.7)) + geom_bar(col = "black", stat = "identity",
+position = "dodge", na.rm = TRUE)  + ggtitle("Total number of processors
+relased by year") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+```{R}
+vendor_vs_year <- cpu_gpu_data[cpu_gpu_data$Type=="CPU",] %>%
+group_by(Vendor, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) %>%
+summarise(total_count = n())
+
+vendor_vs_year <- na.omit(vendor_vs_year)
+
+vendor_vs_year
+
+vendor_vs_year %>%
+ggplot(aes(x = year, y = total_count, group = Vendor,
+fill = Vendor, width=0.7)) + geom_bar(col = "black", stat = "identity",
+position = "dodge", na.rm = TRUE)  + ggtitle("Total number of processors
+relased by year") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+## GPU
+```{R}
+foundry_vs_year <- cpu_gpu_data[cpu_gpu_data$Type=="GPU",] %>%
+group_by(Foundry, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) %>%
+summarise(total_count = n())
+
+foundry_vs_year <- na.omit(foundry_vs_year)
+
+foundry_vs_year
+
+foundry_vs_year %>%
+ggplot(aes(x = year, y = total_count, group = Foundry,
+fill = Foundry, width=0.7)) + geom_bar(col = "black", stat = "identity",
+position = "dodge", na.rm = TRUE)  + ggtitle("Total number of processors
+relased by year") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+```{R}
+vendor_vs_year <- cpu_gpu_data[cpu_gpu_data$Type=="GPU",] %>%
+group_by(Vendor, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) %>%
+summarise(total_count = n())
+
+vendor_vs_year <- na.omit(vendor_vs_year)
+
+vendor_vs_year
+
+vendor_vs_year %>%
+ggplot(aes(x = year, y = total_count, group = Vendor,
+fill = Vendor, width=0.7)) + geom_bar(col = "black", stat = "identity",
+position = "dodge", na.rm = TRUE)  + ggtitle("Total number of processors
+relased by year") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+Over the years, we have seen a general increase in release of processors from 2000 to around 2012, then a general decrease from 2012 to 2021. For CPUs, Intel was the leading foundry and vendor for most of the years. For GPUs, TSMC was the top foundry. ATI was the leading GPU vendor 2010, then AMD and NVIDIA took over.
+
+# Part b)
+
+## Expected Number of transistors per microchip
+### CPU
+```{R}
+cpu_data <- cpu_gpu_data[cpu_gpu_data$Type=="CPU",] %>%
+group_by(`Transistors (million)`, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y"))
+curr <- mean(cpu_data[cpu_data$year == 2000,]$`Transistors (million)`, na.rm=TRUE)
+CPU_exp_nb_trans <- c(curr)
+years <- seq(2000, 2021, by=1)
+for (i in 1:21){
+  curr <- curr*sqrt(2)
+  CPU_exp_nb_trans <- append(CPU_exp_nb_trans, curr)
+}
+
+```
+### GPU
+```{R}
+gpu_data <- cpu_gpu_data[cpu_gpu_data$Type=="GPU",] %>%
+group_by(`Transistors (million)`, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) 
+curr <- mean(gpu_data[gpu_data$year == 2000,]$`Transistors (million)`, na.rm=TRUE)
+GPU_exp_nb_trans <- c(curr)
+for (i in 1:21){
+  curr <- curr*sqrt(2)
+  GPU_exp_nb_trans <- append(GPU_exp_nb_trans, curr)
+}
+
+```
+## Observed number of transistors per microchip
+### CPU
+```{R}
+
+cpu_data <- cpu_gpu_data[cpu_gpu_data$Type=="CPU",] %>%
+group_by(`Transistors (million)`, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) 
+CPU_obs_nb_trans <- c()
+
+for (i in 0:21){
+  curr <- mean(cpu_data[cpu_data$year == 2000+i,]$`Transistors (million)`, na.rm = TRUE)
+  CPU_obs_nb_trans <- append(CPU_obs_nb_trans, curr)
+}
+
+```
+
+### GPU
+```{R}
+
+gpu_data <- cpu_gpu_data[cpu_gpu_data$Type=="GPU",] %>%
+group_by(`Transistors (million)`, year=format(as.Date(na.omit(`Release Date`), format="%Y-%m-%d"),"%Y")) 
+GPU_obs_nb_trans <- c()
+
+for (i in 0:21){
+  curr <- mean(gpu_data[gpu_data$year == 2000+i,]$`Transistors (million)`, na.rm = TRUE)
+  GPU_obs_nb_trans <- append(GPU_obs_nb_trans, curr)
+}
+
+```
+
+### All together
+```{R}
+result <- data.frame(years, CPU_exp_nb_trans, CPU_obs_nb_trans,GPU_exp_nb_trans, GPU_obs_nb_trans)
+result
+```
+
+### Graphically
+```{R}
+ggplot(data=result, aes(years)) +
+  geom_point(aes(y=CPU_exp_nb_trans, color="CPU Expected"))+
+  geom_point(aes(y=CPU_obs_nb_trans, color="CPU Observed"))+
+  geom_point(aes(y=GPU_exp_nb_trans, color="GPU Expected"))+
+  geom_point(aes(y=GPU_obs_nb_trans, color="GPU Observed"))
+```
+Hence, from the table and plot above, we can say that Moore's Law is no longer valid.
